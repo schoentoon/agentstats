@@ -6,17 +6,20 @@ import (
 	"time"
 )
 
+// Client An api client used to make calls to the agent stats api
 type Client struct {
-	ApiToken string
+	APIToken string
 	client   *http.Client
 }
 
+// Group A representation of a group, you can later on use the ID to request stats of people in the group
 type Group struct {
-	Id   string `json:"groupid"`
+	ID   string `json:"groupid"`
 	Name string `json:"groupname"`
 	Rank string `json:"rank"`
 }
 
+// Stats A representation of stats of an agent, you'll get these from the GroupProgress() call
 type Stats struct {
 	AP             uint64 `json:"ap"`
 	Explorer       uint64 `json:"explorer"`
@@ -53,12 +56,14 @@ type Stats struct {
 	LastSubmit     string `json:"last_submit"`
 }
 
+// Progress Top level object from the Progress() call
 type Progress struct {
 	Medals Medals `json:"mymedals"`
 }
 
+// Medals All the medals that we have data for in the Progress struct
 type Medals struct {
-  Explorer       Medal `json:"explorer"`
+	Explorer       Medal `json:"explorer"`
 	Seer           Medal `json:"seer"`
 	Collector      Medal `json:"collector"`
 	Hacker         Medal `json:"hacker"`
@@ -89,6 +94,7 @@ type Medals struct {
 	MissionDay     Medal `json:"missionday"`
 }
 
+// Medal A single medal and that info about it, like how many are missing for black etc.
 type Medal struct {
 	Missing struct {
 		Black    uint64 `json:"black"`
@@ -105,16 +111,18 @@ type Medal struct {
 	} `json:"progression"`
 }
 
-func NewClient(apiToken string) *Client {
-	return &Client{ApiToken: apiToken, client: &http.Client{}}
+// NewClient Create a new client using the api token provided
+func NewClient(APIToken string) *Client {
+	return &Client{APIToken: APIToken, client: &http.Client{}}
 }
 
+// Groups List all the groups that the authenticated user is in
 func (client *Client) Groups() (groups []Group, err error) {
 	req, err := http.NewRequest("GET", "https://api.agent-stats.com/groups", nil)
 	if err != nil {
 		return
 	}
-	req.Header.Add("AS-Key", client.ApiToken)
+	req.Header.Add("AS-Key", client.APIToken)
 
 	resp, err := client.client.Do(req)
 
@@ -125,12 +133,13 @@ func (client *Client) Groups() (groups []Group, err error) {
 	return
 }
 
+// GroupProgress Show all the progress of all the people in a certain group
 func (client *Client) GroupProgress(group string) (progress map[string]Stats, err error) {
 	req, err := http.NewRequest("GET", "https://api.agent-stats.com/groups/"+group, nil)
 	if err != nil {
 		return
 	}
-	req.Header.Add("AS-Key", client.ApiToken)
+	req.Header.Add("AS-Key", client.APIToken)
 
 	resp, err := client.client.Do(req)
 
@@ -141,12 +150,13 @@ func (client *Client) GroupProgress(group string) (progress map[string]Stats, er
 	return
 }
 
+// Progress Get detailed progress information about the authenticated user
 func (client *Client) Progress(since time.Time) (output Progress, err error) {
 	req, err := http.NewRequest("GET", "https://api.agent-stats.com/progress/"+since.Format("2006-01-02"), nil)
 	if err != nil {
 		return
 	}
-	req.Header.Add("AS-Key", client.ApiToken)
+	req.Header.Add("AS-Key", client.APIToken)
 
 	resp, err := client.client.Do(req)
 
